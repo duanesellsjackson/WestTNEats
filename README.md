@@ -26,12 +26,35 @@ Built by Jeepney Ventures, LLC.
 
 ## Commands
 
-| Command           | Action                                  |
-| :---------------- | :-------------------------------------- |
-| `npm install`     | Install dependencies                    |
-| `npm run dev`     | Start dev server at `localhost:4321`    |
-| `npm run build`   | Build production site to `./dist/`      |
-| `npm run preview` | Preview the build locally               |
+| Command            | Action                                  |
+| :----------------- | :-------------------------------------- |
+| `npm install`      | Install dependencies                    |
+| `npm run dev`      | Start dev server at `localhost:4321`    |
+| `npm run build`    | Build production site to `./dist/`      |
+| `npm run preview`  | Preview the build locally               |
+| `npm run db:setup` | Create the trucks table in Turso        |
+
+## Database setup
+
+1. Copy `.env.example` to `.env`.
+2. For local dev, use `TURSO_DATABASE_URL=file:local.db` (no token needed).
+3. For production, create the database and credentials:
+
+   ```sh
+   turso auth login
+   turso db create westtneats
+   turso db show westtneats --url        # -> TURSO_DATABASE_URL
+   turso db tokens create westtneats     # -> TURSO_AUTH_TOKEN
+   ```
+
+4. Run `npm run db:setup` to create the trucks table.
+5. Add both variables to Vercel project settings for deployment.
+
+New truck registrations are saved as `pending`. To approve one:
+
+```sh
+turso db shell westtneats "UPDATE trucks SET status='approved' WHERE id=<id>"
+```
 
 ## Deployment
 

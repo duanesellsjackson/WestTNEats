@@ -1,0 +1,91 @@
+---
+// Layer 1: the interactive map. Loads Leaflet, fetches approved trucks
+// from /api/trucks, and drops a pin for each one.
+---
+
+<div id="truck-map" role="application" aria-label="Map of food trucks in West Tennessee"></div>
+<p id="map-status" class="map-status" aria-live="polite">Loading trucks…</p>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+  import markerIcon from 'leaflet/dist/images/marker-icon.png?url';
+  import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png?url';
+  import markerShadow from 'leaflet/dist/images/marker-shadow.png?url';
+  import { MAP_CENTER, MAP_ZOOM } from '../../lib/cities';
+
+  // Leaflet's default icon paths break under bundlers; point them at the bundled assets.
+  L.Icon.Default.mergeOptions({
+    iconUrl: markerIcon,
+    iconRetinaUrl: markerIcon2x,
+    shadowUrl: markerShadow,
+  });
+
+  const map = L.map('truck-map').setView([MAP_CENTER.lat, MAP_CENTER.lng], MAP_ZOOM);
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+
+  const status = document.getElementById('map-status')!;
+
+  function escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  }
+
+  interface TruckPin {
+    name: string;
+    city: string;
+    cuisine: string;
+    hours: string;
+    phone: string | null;
+    instagram: string | null;
+    lat: number;
+    lng: number;
+  }
+
+  try {
+    const res = await fetch('/api/trucks');
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    const { trucks } = (await res.json()) as { trucks: TruckPin[] };
+
+    for (const truck of trucks) {
+      const lines = [
+        `<strong>${escapeHtml(truck.name)}</strong>`,
+        `${escapeHtml(truck.cuisine)} &middot; ${escapeHtml(truck.city)}, TN`,
+        escapeHtml(truck.hours),
+      ];
+      if (truck.phone) {
+        lines.push(`<a href="tel:${escapeHtml(truck.phone)}">${escapeHtml(truck.phone)}</a>`);
+      }
+      if (truck.instagram) {
+        const handle = truck.instagram.replace(/^@/, '');
+        lines.push(`<a href="https://instagram.com/${escapeHtml(handle)}" target="_blank" rel="noopener">@${escapeHtml(handle)}</a>`);
+      }
+      L.marker([truck.lat, truck.lng]).addTo(map).bindPopup(lines.join('<br>'));
+    }
+
+    status.textContent = trucks.length
+      ? `${trucks.length} food truck${trucks.length === 1 ? '' : 's'} on the map. Tap a pin for details.`
+      : 'No trucks on the map yet. Be the first to add yours below!';
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Could not load trucks right now. Please try again later.';
+  }
+</script>
+
+<style>
+  #truck-map {
+    height: 60vh;
+    min-height: 20rem;
+    border-radius: 0.5rem;
+    z-index: 0;
+  }
+
+  .map-status {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+</style>
