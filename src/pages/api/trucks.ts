@@ -16,7 +16,7 @@ export const GET: APIRoute = async () => {
   try {
     const db = await getDb();
     const result = await db.execute(
-      "SELECT id, name, city, cuisine, hours, phone, instagram, lat, lng FROM trucks WHERE status = 'approved' ORDER BY name"
+      "SELECT id, name, city, cuisine, hours, phone, instagram, lat, lng, created_at FROM trucks WHERE status = 'approved' ORDER BY name"
     );
     return json({ trucks: result.rows });
   } catch (err) {

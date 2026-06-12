@@ -1,11 +1,21 @@
 /* WestTNEats global styles. Mobile-first. Keep it lean. */
 
 :root {
-  --color-bg: #fffdf8;
-  --color-text: #2b2620;
-  --color-accent: #c0392b;
-  --color-accent-dark: #96281b;
-  --color-muted: #6b6358;
+  --color-night-market: #1A1A2E;
+  --color-tailgate-red: #E8472A;
+  --color-harvest-amber: #F5A623;
+  --color-porch-light: #FDF6EC;
+  --color-field-green: #3D6B4F;
+
+  --color-muted: #6e6a75;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
   --max-width: 72rem;
 }
 
@@ -16,13 +26,21 @@
 }
 
 body {
+  font-family: var(--font-body);
+  background: var(--color-porch-light);
+  color: var(--color-night-market);
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--color-text);
-  background: var(--color-bg);
   -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 img {
@@ -32,11 +50,11 @@ img {
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-tailgate-red);
 }
 
 a:hover {
-  color: var(--color-accent-dark);
+  opacity: 0.85;
 }
 
 .container {

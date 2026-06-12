@@ -1,6 +1,6 @@
 ---
 // Layer 1: the interactive map. Loads Leaflet, fetches approved trucks
-// from /api/trucks, and drops a pin for each one.
+// from /api/trucks, and drops a custom food truck pin for each one.
 ---
 
 <div id="truck-map" role="application" aria-label="Map of food trucks in West Tennessee"></div>
@@ -9,17 +9,7 @@
 <script>
   import L from 'leaflet';
   import 'leaflet/dist/leaflet.css';
-  import markerIcon from 'leaflet/dist/images/marker-icon.png?url';
-  import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png?url';
-  import markerShadow from 'leaflet/dist/images/marker-shadow.png?url';
   import { MAP_CENTER, MAP_ZOOM } from '../../lib/cities';
-
-  // Leaflet's default icon paths break under bundlers; point them at the bundled assets.
-  L.Icon.Default.mergeOptions({
-    iconUrl: markerIcon,
-    iconRetinaUrl: markerIcon2x,
-    shadowUrl: markerShadow,
-  });
 
   const map = L.map('truck-map').setView([MAP_CENTER.lat, MAP_CENTER.lng], MAP_ZOOM);
 
@@ -34,6 +24,40 @@
     return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
   }
 
+  // Teardrop map pin with a food truck inside. Shell color marks the state:
+  // tailgate red for active trucks, harvest amber for trucks added in the
+  // last 7 days. (Field green is reserved for "open now" once hours are
+  // structured enough to compute it.)
+  function truckPin(color: string): L.DivIcon {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="48" viewBox="0 0 34 48" aria-hidden="true">
+        <path fill="${color}" stroke="#fff" stroke-width="1.5"
+          d="M17 1.5C8.4 1.5 1.5 8.4 1.5 17c0 5.6 3.4 11.8 6.9 16.9 3.4 4.9 7 8.9 8.6 10.7 1.6-1.8 5.2-5.8 8.6-10.7 3.5-5.1 6.9-11.3 6.9-16.9 0-8.6-6.9-15.5-15.5-15.5z"/>
+        <rect x="8" y="10.5" width="18" height="10" rx="1.8" fill="#fff"/>
+        <rect x="10.2" y="12.8" width="4.6" height="3.8" rx="0.9" fill="#B8D4F0"/>
+        <rect x="17" y="12.8" width="6.8" height="3.8" rx="0.9" fill="#B8D4F0"/>
+        <circle cx="12.5" cy="21.5" r="2.2" fill="#1A1A2E"/>
+        <circle cx="21.5" cy="21.5" r="2.2" fill="#1A1A2E"/>
+      </svg>`;
+    return L.divIcon({
+      html: svg,
+      className: 'truck-pin',
+      iconSize: [34, 48],
+      iconAnchor: [17, 47],
+      popupAnchor: [0, -42],
+    });
+  }
+
+  const PIN_ACTIVE = truckPin('#E8472A');
+  const PIN_NEW = truckPin('#F5A623');
+
+  function isNew(createdAt: string | null): boolean {
+    if (!createdAt) return false;
+    // Stored as UTC "YYYY-MM-DD HH:MM:SS".
+    const added = new Date(createdAt.replace(' ', 'T') + 'Z').getTime();
+    return Number.isFinite(added) && Date.now() - added < 7 * 24 * 60 * 60 * 1000;
+  }
+
   interface TruckPin {
     name: string;
     city: string;
@@ -43,6 +67,7 @@
     instagram: string | null;
     lat: number;
     lng: number;
+    created_at: string | null;
   }
 
   try {
@@ -52,9 +77,9 @@
 
     for (const truck of trucks) {
       const lines = [
-        `<strong>${escapeHtml(truck.name)}</strong>`,
-        `${escapeHtml(truck.cuisine)} &middot; ${escapeHtml(truck.city)}, TN`,
-        escapeHtml(truck.hours),
+        `<strong class="popup-name">${escapeHtml(truck.name)}</strong>`,
+        `<span>${escapeHtml(truck.cuisine)} &middot; ${escapeHtml(truck.city)}, TN</span>`,
+        `<span>${escapeHtml(truck.hours)}</span>`,
       ];
       if (truck.phone) {
         lines.push(`<a href="tel:${escapeHtml(truck.phone)}">${escapeHtml(truck.phone)}</a>`);
@@ -63,7 +88,9 @@
         const handle = truck.instagram.replace(/^@/, '');
         lines.push(`<a href="https://instagram.com/${escapeHtml(handle)}" target="_blank" rel="noopener">@${escapeHtml(handle)}</a>`);
       }
-      L.marker([truck.lat, truck.lng]).addTo(map).bindPopup(lines.join('<br>'));
+      L.marker([truck.lat, truck.lng], { icon: isNew(truck.created_at) ? PIN_NEW : PIN_ACTIVE })
+        .addTo(map)
+        .bindPopup(`<div class="truck-popup">${lines.join('')}</div>`);
     }
 
     status.textContent = trucks.length
@@ -77,9 +104,8 @@
 
 <style>
   #truck-map {
-    height: 60vh;
-    min-height: 20rem;
-    border-radius: 0.5rem;
+    height: 85vh;
+    border-radius: var(--radius-lg);
     z-index: 0;
   }
 
@@ -87,5 +113,38 @@
     color: var(--color-muted);
     font-size: 0.9rem;
     text-align: center;
+  }
+
+  @media (min-width: 48rem) {
+    #truck-map {
+      height: 70vh;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Pin and popup content are injected by Leaflet at runtime, so these
+     styles must be global rather than component-scoped. */
+  .truck-pin {
+    background: none;
+    border: none;
+  }
+
+  .truck-popup {
+    display: grid;
+    gap: 0.15rem;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+  }
+
+  .truck-popup .popup-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--color-night-market);
+  }
+
+  .truck-popup a {
+    color: var(--color-tailgate-red);
   }
 </style>
