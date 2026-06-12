@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 
 import vercel from '@astrojs/vercel';
 
@@ -7,4 +7,12 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   site: 'https://westtneats.com',
   adapter: vercel(),
+  env: {
+    schema: {
+      // Secrets are read at runtime (process.env on Vercel), never baked
+      // into the build output.
+      TURSO_DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+      TURSO_AUTH_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
+    },
+  },
 });

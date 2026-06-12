@@ -13,7 +13,7 @@ function json(body: unknown, status = 200) {
 
 // GET /api/trucks — all approved trucks, for the map pins.
 export const GET: APIRoute = async () => {
-  const db = getDb();
+  const db = await getDb();
   const result = await db.execute(
     "SELECT id, name, city, cuisine, hours, phone, instagram, lat, lng FROM trucks WHERE status = 'approved' ORDER BY name"
   );
@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
     const lat = coords.lat + jitter();
     const lng = coords.lng + jitter();
 
-    const db = getDb();
+    const db = await getDb();
     await db.execute({
       sql: `INSERT INTO trucks (name, owner, city, cuisine, hours, phone, instagram, lat, lng, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
