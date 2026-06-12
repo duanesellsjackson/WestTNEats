@@ -20,11 +20,9 @@ export const GET: APIRoute = async () => {
     );
     return json({ trucks: result.rows });
   } catch (err) {
-    // TEMPORARY diagnostic detail in the response while we debug production.
+    // Details go to the server logs only.
     console.error('GET /api/trucks failed:', err);
-    const code = (err as { code?: string }).code ?? 'UNKNOWN';
-    const message = err instanceof Error ? err.message : String(err);
-    return json({ error: 'Database error', code, message }, 500);
+    return json({ error: 'Database error' }, 500);
   }
 };
 
