@@ -13,11 +13,19 @@ function json(body: unknown, status = 200) {
 
 // GET /api/trucks — all approved trucks, for the map pins.
 export const GET: APIRoute = async () => {
-  const db = await getDb();
-  const result = await db.execute(
-    "SELECT id, name, city, cuisine, hours, phone, instagram, lat, lng FROM trucks WHERE status = 'approved' ORDER BY name"
-  );
-  return json({ trucks: result.rows });
+  try {
+    const db = await getDb();
+    const result = await db.execute(
+      "SELECT id, name, city, cuisine, hours, phone, instagram, lat, lng FROM trucks WHERE status = 'approved' ORDER BY name"
+    );
+    return json({ trucks: result.rows });
+  } catch (err) {
+    // TEMPORARY diagnostic detail in the response while we debug production.
+    console.error('GET /api/trucks failed:', err);
+    const code = (err as { code?: string }).code ?? 'UNKNOWN';
+    const message = err instanceof Error ? err.message : String(err);
+    return json({ error: 'Database error', code, message }, 500);
+  }
 };
 
 // POST /api/trucks — self-registration. New trucks start as pending.
