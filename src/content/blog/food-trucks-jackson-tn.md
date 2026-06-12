@@ -1,7 +1,7 @@
 ---
 title: "The Best Food Trucks in Jackson, TN"
 description: "A living guide to the food trucks rolling through Jackson, Tennessee. Updated as new trucks join the map."
-pubDate: 2025-06-12
+pubDate: 2026-06-12
 heroImage: "/images/blog/jackson-food-trucks.jpg"
 city: "Jackson, TN"
 ---
