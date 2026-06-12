@@ -24,6 +24,7 @@ const { title, description } = Astro.props;
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
     />
     <title>{title}</title>
+    <slot name="head" />
   </head>
   <body>
     <header class="site-header">
@@ -31,7 +32,10 @@ const { title, description } = Astro.props;
         <a href="/" class="brand">
           <span class="brand-west">WestTN</span><span class="brand-eats">Eats</span>
         </a>
-        <a href="/map/#register" class="nav-cta">Add Your Truck</a>
+        <div class="nav-right">
+          <a href="/blog/" class="nav-link">Blog</a>
+          <a href="/map/#register" class="nav-cta">Add Your Truck</a>
+        </div>
       </nav>
     </header>
     <main>
@@ -74,6 +78,23 @@ const { title, description } = Astro.props;
 
   .brand-eats {
     color: var(--color-tailgate-red);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .nav-link {
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .nav-link:hover {
+    opacity: 0.85;
   }
 
   .nav-cta {

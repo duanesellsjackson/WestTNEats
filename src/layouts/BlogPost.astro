@@ -1,0 +1,174 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  heroImage?: string;
+  images?: string[];
+  city?: string;
+}
+
+const { title, description, pubDate, heroImage, images, city } = Astro.props;
+
+const formattedDate = pubDate.toLocaleDateString('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+});
+
+const ogImage = heroImage ? new URL(heroImage, Astro.site).href : undefined;
+---
+
+<BaseLayout title={`${title} | WestTNEats`} description={description}>
+  <Fragment slot="head">
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:type" content="article" />
+  </Fragment>
+
+  {
+    heroImage && (
+      <Image
+        src={heroImage}
+        alt={title}
+        width={1280}
+        height={720}
+        loading="lazy"
+        decoding="async"
+        class="hero-image"
+      />
+    )
+  }
+
+  {/* Astro strips plain HTML comments, so emit the ad slot marker via set:html. */}
+  <Fragment set:html={'<!-- AdSense unit: insert auto ad script here after approval -->'} />
+
+  <article class="post container">
+    <header>
+      <h1>{title}</h1>
+      <p class="post-meta">
+        {city && <span class="city-tag">{city}</span>}
+        <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+      </p>
+    </header>
+
+    <div class="post-body">
+      <slot />
+    </div>
+
+    {
+      images && images.length > 0 && (
+        <div class="post-images">
+          {images.map((src) => (
+            <img src={src} alt="" loading="lazy" decoding="async" />
+          ))}
+        </div>
+      )
+    }
+
+    <aside class="map-callout">
+      <h2>Find food trucks near you &rarr;</h2>
+      <a href="/map/" class="callout-cta">Explore the Map</a>
+    </aside>
+  </article>
+</BaseLayout>
+
+<style>
+  .hero-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .post {
+    max-width: 680px;
+    padding-block: 2rem;
+  }
+
+  .post h1 {
+    font-weight: 900;
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
+  }
+
+  .city-tag {
+    background: var(--color-night-market);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .post-body {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .post-body :global(a) {
+    color: var(--color-tailgate-red);
+  }
+
+  .post-images {
+    display: grid;
+    gap: 1rem;
+    margin-block: 1.5rem;
+  }
+
+  .post-images img {
+    width: 100%;
+    max-width: 680px;
+    border-radius: var(--radius-md);
+  }
+
+  .map-callout {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--color-porch-light);
+    border: 0.5px solid #ddd;
+    border-left: 4px solid var(--color-harvest-amber);
+    border-radius: var(--radius-md);
+  }
+
+  .map-callout h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .callout-cta {
+    display: inline-block;
+    background: var(--color-tailgate-red);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-md);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  .callout-cta:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+
+  @media (min-width: 48rem) {
+    .post h1 {
+      font-size: 2.5rem;
+    }
+  }
+</style>

@@ -5,40 +5,125 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 ---
 
 <BaseLayout
   title="Blog | WestTNEats"
   description="Stories and guides about food trucks in Jackson, Milan, Dyersburg, Paris, and all of West Tennessee."
 >
-  <section class="container">
+  <section class="container blog-index">
+    <a href="/map/" class="back-link">&larr; Back to Map</a>
     <h1>The WestTNEats Blog</h1>
     {posts.length === 0 && <p>First posts are on the way. Check back soon.</p>}
-    <ul class="post-list">
+    <div class="post-grid">
       {
         posts.map((post) => (
-          <li>
-            <a href={`/blog/${post.id}/`}>{post.data.title}</a>
-            <p>{post.data.description}</p>
-          </li>
+          <a href={`/blog/${post.id}/`} class="post-card">
+            {post.data.heroImage && (
+              <img src={post.data.heroImage} alt="" loading="lazy" decoding="async" />
+            )}
+            <div class="card-body">
+              <h2>{post.data.title}</h2>
+              <p class="card-meta">
+                {post.data.city && <span class="city-tag">{post.data.city}</span>}
+                <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+              </p>
+              <p class="card-excerpt">{post.data.description}</p>
+            </div>
+          </a>
         ))
       }
-    </ul>
+    </div>
   </section>
 </BaseLayout>
 
 <style>
-  .post-list {
-    list-style: none;
-    padding: 0;
+  .blog-index {
+    padding-block: 2rem;
   }
 
-  .post-list li {
-    margin-block: 1.5rem;
+  .back-link {
+    color: var(--color-night-market);
+    font-size: 0.9rem;
+    text-decoration: none;
   }
 
-  .post-list p {
-    margin: 0.25rem 0 0;
+  .back-link:hover {
+    opacity: 0.8;
+  }
+
+  .blog-index h1 {
+    font-weight: 900;
+    margin-top: 0.75rem;
+  }
+
+  .post-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+
+  .post-card {
+    display: block;
+    background: #fff;
+    border: 0.5px solid #ddd;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--color-night-market);
+    transition: transform 0.15s ease;
+  }
+
+  .post-card:hover {
+    transform: scale(1.01);
+    opacity: 1;
+  }
+
+  .post-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .card-body {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.3rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     color: var(--color-muted);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .city-tag {
+    background: var(--color-night-market);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.1rem 0.6rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .card-excerpt {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .post-grid {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 </style>
